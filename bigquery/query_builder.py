@@ -94,6 +94,9 @@ def _render_select(selections):
             formatter = options_dict.get('format')
             if formatter:
                 name = _format_select(formatter, name)
+            function = options_dict.get('function')
+            if function:
+                name = _add_function(function.get('name'), function.get('args'), name)
 
             rendered_selections.append("%s %s" % (name, alias))
 
@@ -131,6 +134,23 @@ def _format_select(formatter, name):
     return name
 
 
+ONE_ARG_FUNCTIONS = ['COUNT', 'MAX', 'MIN', 'SUM']
+
+
+def _add_function(function, args, name):
+    """
+    """
+
+    function = function.upper()
+    if function in ONE_ARG_FUNCTIONS:
+        name = "%s(%s)" % (function, name)
+    elif function == 'CAST':
+        name = "CAST({} as {})".format(name, *args)
+    else:
+        pass
+
+    return name
+
 def _render_sources(dataset, tables):
     """Render the source part of a query.
 
@@ -161,7 +181,7 @@ def _render_sources(dataset, tables):
 
     else:
         return "FROM " + ", ".join(
-            ["[%s.%s]" % (dataset, table) for table in tables])
+            ["`%s.%s`" % (dataset, table) for table in tables])
 
 
 def _render_conditions(conditions):
